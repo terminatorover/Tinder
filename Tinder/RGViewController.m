@@ -20,6 +20,9 @@ typedef enum{
 @property (nonatomic) UIAttachmentBehavior *attachmentBehaviour;
 @property (nonatomic) UIDynamicAnimator *mainAnimator;
 @property (nonatomic) UISnapBehavior *snapBehaviour;
+@property (weak, nonatomic) IBOutlet UIImageView *mainImage;
+
+@property CGPoint initalImageLocation;
 
 @end
 
@@ -32,6 +35,11 @@ typedef enum{
     // Do any additional setup after loading the view.
 }
 
+- (void)viewWillAppear:(BOOL)animated{
+    [super viewWillAppear:YES];
+    self.initalImageLocation = self.mainImage.center ;
+}
+
 - (void)didReceiveMemoryWarning
 {
     [super didReceiveMemoryWarning];
@@ -42,15 +50,44 @@ typedef enum{
 {
     NSLog(@"panning image");
     
+    CGPoint locationOfTouch = [sender locationInView:self.view];
+    NSLog(@"%@",NSStringFromCGPoint(locationOfTouch));
     if( sender.state == UIGestureRecognizerStateBegan)
     {
+        //remove snap behaviour(in case this is the second round of interaction)
+        [self.mainAnimator removeBehavior:self.snapBehaviour];
+        
+        //add the attachment Behaviour
+        [self.mainAnimator addBehavior:self.attachmentBehaviour];
         
     }else if (sender.state == UIGestureRecognizerStateChanged)
     {
+        //change
+        self.attachmentBehaviour.anchorPoint = locationOfTouch;
         
     }else if(sender.state == UIGestureRecognizerStateEnded)
     {
-
+        //remove the attachment Behaviour
+        [self.mainAnimator removeBehavior:self.attachmentBehaviour];
+        
+        DIRECTION  userIntention = [self getUserMovementIntention:self.mainImage];
+        switch (userIntention) {
+            case ORIGINAL_LOCATION:
+                //snap back to original position
+                [self.mainAnimator addBehavior:self.snapBehaviour];
+                break;
+            case BOTTOM:
+                //use gravity to pull it down
+                break;
+            case RIGHT:
+                //user force to push it to the right
+                break;
+            case LEFT:
+                //use force to push it to the left
+                break;
+            default:
+                break;
+        }
     }
     
 }
@@ -67,7 +104,7 @@ typedef enum{
 {
     if(!_mainAnimator)
     {
-        _mainAnimator = [[UIDynamicAnimator alloc]init];
+        _mainAnimator = [[UIDynamicAnimator alloc]initWithReferenceView:self.view];
     }
     return _mainAnimator;
 }
@@ -77,7 +114,12 @@ typedef enum{
 {
     if(!_attachmentBehaviour)
     {
-        _attachmentBehaviour = [[ UIAttachmentBehavior alloc]init];
+//        _attachmentBehaviour.anchorPoint.x - self.mainImage.center.x
+//        self.mainImage.center.y - _attachmentBehaviour.anchorPoint.y
+        _attachmentBehaviour = [[ UIAttachmentBehavior alloc]initWithItem:self.mainImage
+                                                         offsetFromCenter:UIOffsetMake(-10 ,-10) attachedToAnchor:self.mainImage.center] ;
+                                                                                       
+        
     }
     return _attachmentBehaviour;
 }
@@ -86,7 +128,7 @@ typedef enum{
 {
     if(!_snapBehaviour)
     {
-        _snapBehaviour = [[UISnapBehavior alloc]init];
+        _snapBehaviour = [[UISnapBehavior alloc]initWithItem:self.mainImage snapToPoint:self.initalImageLocation];
     }
     return  _snapBehaviour;
         
@@ -97,10 +139,11 @@ typedef enum{
 /**
  *  Figures out where the user intends to move the image towards
  *
- *  @return DIRECITON typedef 
+ *  @return DIRECITON typedef
  */
--(DIRECTION )getUserMovementIntention
+-(DIRECTION )getUserMovementIntention:(UIView *)givenImage
 {
+    //TODO:
     return ORIGINAL_LOCATION;
 }
 
