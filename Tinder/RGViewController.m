@@ -8,20 +8,16 @@
 
 #import "RGViewController.h"
 
-@interface RGViewController ()
+@interface RGViewController ()<UIGestureRecognizerDelegate>
+
+@property (nonatomic) UIAttachmentBehavior *attachmentBehaviour;
+@property (nonatomic) UIDynamicAnimator *mainAnimator;
+@property (nonatomic) UISnapBehavior *snapBehaviour;
 
 @end
 
 @implementation RGViewController
 
-- (id)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil
-{
-    self = [super initWithNibName:nibNameOrNil bundle:nibBundleOrNil];
-    if (self) {
-        // Custom initialization
-    }
-    return self;
-}
 
 - (void)viewDidLoad
 {
@@ -37,6 +33,8 @@
 
 - (IBAction)panRecognizer:(UIPanGestureRecognizer *)sender
 {
+    NSLog(@"panning image");
+    
     if( sender.state == UIGestureRecognizerStateBegan)
     {
         
@@ -50,6 +48,42 @@
     
 }
 
+#pragma mark - Gesture Recongziner Delegate
+- (BOOL)gestureRecognizer:(UIGestureRecognizer *)gestureRecognizer shouldRecognizeSimultaneouslyWithGestureRecognizer:(UIGestureRecognizer *)otherGestureRecognizer
+{
+    return  YES;
+}
+
+
+#pragma mark - Lazy Loading
+- (UIDynamicAnimator *)mainAnimator
+{
+    if(!_mainAnimator)
+    {
+        _mainAnimator = [[UIDynamicAnimator alloc]init];
+    }
+    return _mainAnimator;
+}
+
+
+- (UIAttachmentBehavior *)attachmentBehaviour
+{
+    if(!_attachmentBehaviour)
+    {
+        _attachmentBehaviour = [[ UIAttachmentBehavior alloc]init];
+    }
+    return _attachmentBehaviour;
+}
+
+- (UISnapBehavior *)snapBehaviour
+{
+    if(!_snapBehaviour)
+    {
+        _snapBehaviour = [[UISnapBehavior alloc]init];
+    }
+    return  _snapBehaviour;
+        
+}
 
 
 /*
