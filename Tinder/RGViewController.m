@@ -20,6 +20,8 @@ typedef enum{
 @property (nonatomic) UIAttachmentBehavior *attachmentBehaviour;
 @property (nonatomic) UIDynamicAnimator *mainAnimator;
 @property (nonatomic) UISnapBehavior *snapBehaviour;
+@property (nonatomic) UIPushBehavior *pushBehaviour;
+
 @property (weak, nonatomic) IBOutlet UIImageView *mainImage;
 
 @property CGPoint initalImageLocation;
@@ -48,14 +50,13 @@ typedef enum{
 
 - (IBAction)panRecognizer:(UIPanGestureRecognizer *)sender
 {
-    NSLog(@"panning image");
     
     CGPoint locationOfTouch = [sender locationInView:self.view];
-    NSLog(@"%@",NSStringFromCGPoint(locationOfTouch));
     if( sender.state == UIGestureRecognizerStateBegan)
     {
-        //remove snap behaviour(in case this is the second round of interaction)
+        //remove snap/push behaviour(in case this is the second round of interaction)
         [self.mainAnimator removeBehavior:self.snapBehaviour];
+        [self.mainAnimator removeBehavior:self.pushBehaviour];
         
         //add the attachment Behaviour
         [self.mainAnimator addBehavior:self.attachmentBehaviour];
@@ -77,13 +78,20 @@ typedef enum{
                 [self.mainAnimator addBehavior:self.snapBehaviour];
                 break;
             case BOTTOM:
-                //use gravity to pull it down
+                //use push to get rid of the card by pushing it down
+                self.pushBehaviour.angle = 1.5f;
+                [self.mainAnimator addBehavior:self.pushBehaviour];
                 break;
             case RIGHT:
                 //user force to push it to the right
+                self.pushBehaviour.angle = M_PI_2;
+                [self.mainAnimator addBehavior:self.pushBehaviour];
                 break;
             case LEFT:
                 //use force to push it to the left
+
+                self.pushBehaviour.angle = M_PI;
+                [self.mainAnimator addBehavior:self.pushBehaviour];
                 break;
             default:
                 break;
@@ -121,7 +129,7 @@ typedef enum{
         NSLog(@"X value: %f",(self.mainImage.center.x - self.initalImageLocation.x )/1.3 );
 
         _attachmentBehaviour = [[ UIAttachmentBehavior alloc]initWithItem:self.mainImage
-                                                         offsetFromCenter:UIOffsetMake(-10,10)
+                                                         offsetFromCenter:UIOffsetMake(10,0)
                                                          attachedToAnchor:self.mainImage.center] ;
                                                                                        
         
@@ -139,6 +147,17 @@ typedef enum{
         
 }
 
+- (UIPushBehavior *)pushBehaviour
+{
+    if(!_pushBehaviour)
+    {
+        _pushBehaviour = [[UIPushBehavior alloc]initWithItems:@[self.mainImage] mode:UIPushBehaviorModeInstantaneous];
+        _pushBehaviour.magnitude = 30.0;
+    }
+    return _pushBehaviour;
+}
+
+
 
 #pragma mark - hit test 
 /**
@@ -146,9 +165,24 @@ typedef enum{
  *
  *  @return DIRECITON typedef
  */
--(DIRECTION )getUserMovementIntention:(UIView *)givenImage
+- (DIRECTION )getUserMovementIntention:(UIView *)givenImage
 {
     //TODO:
+    BOOL leaningLeft = givenImage.center.x  < self.initalImageLocation.x - 50 ;
+    BOOL inBottomHalf = givenImage.center.y > self.initalImageLocation.y + 200 ;
+    BOOL leaningRight = givenImage.center.x  > self.initalImageLocation.x + 50;
+
+    if(leaningLeft && inBottomHalf )
+    {
+        NSLog(@"Move LEft");
+        return LEFT;
+    }
+    else if (leaningRight && inBottomHalf )
+    {
+        NSLog(@"Move Right");
+        return RIGHT ;
+    }
+    NSLog(@"Move back where you came from");
     return ORIGINAL_LOCATION;
 }
 

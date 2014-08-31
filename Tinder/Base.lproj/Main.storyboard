@@ -18,7 +18,7 @@
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                         <subviews>
                             <imageView contentMode="scaleToFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="faP-Ap-YIj">
-                                <rect key="frame" x="60" y="53" width="200" height="200"/>
+                                <rect key="frame" x="10" y="53" width="300" height="200"/>
                                 <color key="backgroundColor" red="0.83533873179999996" green="0.33693544710000001" blue="0.23529411759999999" alpha="1" colorSpace="calibratedRGB"/>
                                 <gestureRecognizers/>
                                 <connections>
