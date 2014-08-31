@@ -8,6 +8,13 @@
 
 #import "RGViewController.h"
 
+typedef enum{
+    RIGHT,
+    LEFT,
+    BOTTOM,
+    ORIGINAL_LOCATION
+}DIRECTION;
+
 @interface RGViewController ()<UIGestureRecognizerDelegate>
 
 @property (nonatomic) UIAttachmentBehavior *attachmentBehaviour;
@@ -43,7 +50,7 @@
         
     }else if(sender.state == UIGestureRecognizerStateEnded)
     {
-        
+
     }
     
 }
@@ -85,6 +92,17 @@
         
 }
 
+
+#pragma mark - hit test 
+/**
+ *  Figures out where the user intends to move the image towards
+ *
+ *  @return DIRECITON typedef 
+ */
+-(DIRECTION )getUserMovementIntention
+{
+    return ORIGINAL_LOCATION;
+}
 
 /*
 #pragma mark - Navigation
