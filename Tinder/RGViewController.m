@@ -62,7 +62,7 @@ typedef enum{
         
     }else if (sender.state == UIGestureRecognizerStateChanged)
     {
-        //change
+        //change anchor point to change the location of the
         self.attachmentBehaviour.anchorPoint = locationOfTouch;
         
     }else if(sender.state == UIGestureRecognizerStateEnded)
@@ -116,8 +116,13 @@ typedef enum{
     {
 //        _attachmentBehaviour.anchorPoint.x - self.mainImage.center.x
 //        self.mainImage.center.y - _attachmentBehaviour.anchorPoint.y
+                
+//        self.mainImage.center.x - self.initalImageLocation.x
+        NSLog(@"X value: %f",(self.mainImage.center.x - self.initalImageLocation.x )/1.3 );
+
         _attachmentBehaviour = [[ UIAttachmentBehavior alloc]initWithItem:self.mainImage
-                                                         offsetFromCenter:UIOffsetMake(-10 ,-10) attachedToAnchor:self.mainImage.center] ;
+                                                         offsetFromCenter:UIOffsetMake(-10,10)
+                                                         attachedToAnchor:self.mainImage.center] ;
                                                                                        
         
     }
