@@ -27,6 +27,7 @@ typedef enum{
 @property (weak, nonatomic) IBOutlet UIImageView *mainImage;
 
 @property CGPoint initalImageLocation;
+@property CGAffineTransform initalTransform;
 
 @end
 
@@ -42,6 +43,7 @@ typedef enum{
 - (void)viewWillAppear:(BOOL)animated{
     [super viewWillAppear:YES];
     self.initalImageLocation = self.mainImage.center ;
+    self.initalTransform = self.mainImage.transform;
 }
 
 - (void)didReceiveMemoryWarning
@@ -95,23 +97,50 @@ typedef enum{
                 //use push to get rid of the card by pushing it down
                 self.pushBehaviour.angle = 1.5f;
                 [self.mainAnimator addBehavior:self.pushBehaviour];
+                [self animateBackToScreen];
                 break;
             case RIGHT:
                 //user force to push it to the right
                 self.pushBehaviour.angle = M_PI_2;
                 [self.mainAnimator addBehavior:self.pushBehaviour];
+                [self animateBackToScreen];
                 break;
             case LEFT:
                 //use force to push it to the left
-
                 self.pushBehaviour.angle = M_PI;
                 [self.mainAnimator addBehavior:self.pushBehaviour];
+                [self animateBackToScreen];
                 break;
             default:
                 break;
         }
     }
     
+}
+
+
+#pragma mark - Move back onto screen 
+- (void)animateBackToScreen
+{
+    
+    [self.mainAnimator removeAllBehaviors];
+    self.mainImage.frame = CGRectMake(self.initalImageLocation.x, self.initalImageLocation.y, 0, 0);
+    self.mainImage.transform = self.initalTransform;
+    self.mainImage.alpha = 0.0;
+    NSTimeInterval waitForTime = 1;
+    [UIView animateWithDuration:1.5
+                          delay:waitForTime
+         usingSpringWithDamping:.5
+          initialSpringVelocity:1.0f
+                        options:UIViewAnimationOptionCurveEaseIn
+                     animations:^{
+                         self.mainImage.frame = CGRectMake(self.initalImageLocation.x, self.initalImageLocation.y, 300,200);
+                         self.mainImage.center = self.initalImageLocation;
+                         self.mainImage.alpha = 1.0;
+    }
+                     completion:^(BOOL finished) {
+       
+    }];
 }
 
 #pragma mark - Gesture Recongziner Delegate
