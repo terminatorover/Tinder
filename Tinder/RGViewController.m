@@ -11,7 +11,7 @@
 #import "RGViewController.h"
 
 typedef enum{
-    RIGHT,
+    RIGHT = 0,
     LEFT,
     BOTTOM,
     ORIGINAL_LOCATION
@@ -19,7 +19,7 @@ typedef enum{
 
 
 typedef enum{
-    TOP_CARD,
+    TOP_CARD = 0,
     BOTTOM_CARD
 }CURRENTLY_SHOWING;
 
@@ -28,7 +28,8 @@ typedef enum{
 @property (nonatomic) UIAttachmentBehavior *attachmentBehaviour;
 @property (nonatomic) UIDynamicAnimator *mainAnimator;
 @property (nonatomic) UISnapBehavior *snapBehaviour;
-@property (nonatomic) UIPushBehavior *pushBehaviour;
+@property (nonatomic) UIPushBehavior *mainPushBehaviour;
+@property (nonatomic) UIPushBehavior *backImagePushBehaviour;
 
 @property (weak, nonatomic) IBOutlet UIImageView *mainImage;
 @property (weak, nonatomic) IBOutlet UIImageView *backImage;
@@ -36,6 +37,7 @@ typedef enum{
 @property CURRENTLY_SHOWING cardShown;
 
 @property CGPoint initalImageLocation;
+@property CGRect initalImageFrame;
 
 @end
 
@@ -52,6 +54,7 @@ typedef enum{
 - (void)viewWillAppear:(BOOL)animated{
     [super viewWillAppear:YES];
     self.initalImageLocation = self.mainImage.center ;
+    self.initalImageFrame = self.mainImage.frame;
 }
 
 - (void)didReceiveMemoryWarning
@@ -62,13 +65,14 @@ typedef enum{
 
 - (IBAction)panRecognizer:(UIPanGestureRecognizer *)sender
 {
+    NSLog(@"Current Card: %d",self.cardShown);
     
     CGPoint locationOfTouch = [sender locationInView:self.view];
+    UIImageView *toAnimate = [self toBeAnimated];
     if( sender.state == UIGestureRecognizerStateBegan)
     {
         //remove snap/push behaviour(in case this is the second round of interaction)
-        [self.mainAnimator removeBehavior:self.snapBehaviour];
-        [self.mainAnimator removeBehavior:self.pushBehaviour];
+        [self.mainAnimator removeAllBehaviors];
         
         
         //add the attachment Behaviour
@@ -80,9 +84,9 @@ typedef enum{
                                                         (touchPointInImage.y -midYValueOfBox)/5);
         
         
-        _attachmentBehaviour = [[ UIAttachmentBehavior alloc]initWithItem:self.mainImage
+        _attachmentBehaviour = [[ UIAttachmentBehavior alloc]initWithItem:toAnimate
                                                          offsetFromCenter:userTouchTriggerdOffset
-                                                         attachedToAnchor:self.mainImage.center] ;
+                                                         attachedToAnchor:toAnimate.center] ;
         [self.mainAnimator addBehavior:self.attachmentBehaviour];
         
     }else if (sender.state == UIGestureRecognizerStateChanged)
@@ -91,12 +95,11 @@ typedef enum{
         self.attachmentBehaviour.anchorPoint = locationOfTouch;
 //        self.mainImage.center = locationOfTouch ;
         
-        
     }else if(sender.state == UIGestureRecognizerStateEnded)
     {
         //remove the attachment Behaviour
         [self.mainAnimator removeBehavior:self.attachmentBehaviour];
-        DIRECTION  userIntention = [self getUserMovementIntention:self.mainImage];
+        DIRECTION  userIntention = [self getUserMovementIntention:toAnimate];
         switch (userIntention) {
             case ORIGINAL_LOCATION:
                 //snap back to original position
@@ -104,20 +107,21 @@ typedef enum{
                 break;
             case BOTTOM:
                 //use push to get rid of the card by pushing it down
-                self.pushBehaviour.angle = 1.5f;
-                [self.mainAnimator addBehavior:self.pushBehaviour];
+                self.mainPushBehaviour.angle = 1.5f;
+                [self.mainAnimator addBehavior:self.mainPushBehaviour];
+                [self addPushToCorrectImage];
                 [self setCurrentCardShown];
                 break;
             case RIGHT:
                 //user force to push it to the right
-                self.pushBehaviour.angle = M_PI_2;
-                [self.mainAnimator addBehavior:self.pushBehaviour];
+                self.mainPushBehaviour.angle = M_PI_2;
+                [self addPushToCorrectImage];
                 [self setCurrentCardShown];
                 break;
             case LEFT:
                 //use force to push it to the left
-                self.pushBehaviour.angle = M_PI;
-                [self.mainAnimator addBehavior:self.pushBehaviour];
+                self.mainPushBehaviour.angle = M_PI;
+                [self addPushToCorrectImage];
                 [self setCurrentCardShown];
                 break;
             default:
@@ -157,16 +161,26 @@ typedef enum{
         
 }
 
-- (UIPushBehavior *)pushBehaviour
+- (UIPushBehavior *)mainPushBehaviour
 {
-    if(!_pushBehaviour)
+    if(!_mainPushBehaviour)
     {
-        _pushBehaviour = [[UIPushBehavior alloc]initWithItems:@[self.mainImage] mode:UIPushBehaviorModeInstantaneous];
-        _pushBehaviour.magnitude = PUSH_FORCE;
+        _mainPushBehaviour = [[UIPushBehavior alloc]initWithItems:@[self.mainImage] mode:UIPushBehaviorModeInstantaneous];
+        _mainPushBehaviour.magnitude = PUSH_FORCE;
     }
-    return _pushBehaviour;
+    return _mainPushBehaviour;
 }
 
+
+- (UIPushBehavior *)backImagePushBehaviour
+{
+    if(!_backImagePushBehaviour)
+    {
+        _backImagePushBehaviour = [[UIPushBehavior alloc]initWithItems:@[self.backImagePushBehaviour] mode:UIPushBehaviorModeInstantaneous];
+        _backImagePushBehaviour.magnitude = PUSH_FORCE;
+    }
+    return _backImagePushBehaviour;
+}
 
 #pragma mark - Helepers
 /**
@@ -178,10 +192,12 @@ typedef enum{
 {
     if(self.cardShown == TOP_CARD)
     {
-        self.backImage.center = self.initalImageLocation;
+//        self.backImage.center = self.initalImageLocation;
+        self.backImage.frame = self.initalImageFrame;
         return self.mainImage;
     }
-    self.mainImage.center = self.initalImageLocation;
+//    self.mainImage.center = self.initalImageLocation;
+    self.mainImage.frame = self.initalImageFrame;
     return self.backImage;
 }
 
@@ -196,13 +212,34 @@ typedef enum{
     if(self.cardShown == TOP_CARD)
     {
         self.cardShown = BOTTOM_CARD;
+        self.mainImage.userInteractionEnabled = NO;
         [self.view bringSubviewToFront:self.backImage];
         return;
     }
     [self.view bringSubviewToFront:self.mainImage];
+    self.backImage.userInteractionEnabled = NO;
     self.cardShown = TOP_CARD;
 }
-#pragma mark - hit test 
+/**
+ *  There are two images and each has it's own push behaviour. 
+ *  calling this method adds the right push behaviour to the 
+ *  the right image
+ */
+- (void)addPushToCorrectImage
+{
+    
+    if(self.cardShown == TOP_CARD)
+    {
+        [self.mainAnimator addBehavior:self.mainPushBehaviour];
+        return;
+    }else
+    {
+        [self.mainAnimator addBehavior:self.backImagePushBehaviour];
+    }
+
+}
+
+#pragma mark - hit test
 /**
  *  Figures out where the user intends to move the image towards
  *
