@@ -6,6 +6,8 @@
 //  Copyright (c) 2014 EnterWithBoldness. All rights reserved.
 //
 
+#define PUSH_FORCE 100.0
+
 #import "RGViewController.h"
 
 typedef enum{
@@ -59,18 +61,30 @@ typedef enum{
         [self.mainAnimator removeBehavior:self.pushBehaviour];
         
         //add the attachment Behaviour
+        CGPoint touchPointInImage = [sender locationInView:self.mainImage];
+        CGFloat midXValueOfBox = CGRectGetMidX( self.mainImage.frame);
+        CGFloat midYValueOfBox = CGRectGetMidY(self.mainImage.frame);
+        
+        UIOffset userTouchTriggerdOffset = UIOffsetMake((touchPointInImage.x - midXValueOfBox)/5,
+                                                        (touchPointInImage.y -midYValueOfBox)/5);
+        
+        
+        _attachmentBehaviour = [[ UIAttachmentBehavior alloc]initWithItem:self.mainImage
+                                                         offsetFromCenter:userTouchTriggerdOffset
+                                                         attachedToAnchor:self.mainImage.center] ;
         [self.mainAnimator addBehavior:self.attachmentBehaviour];
         
     }else if (sender.state == UIGestureRecognizerStateChanged)
     {
         //change anchor point to change the location of the
         self.attachmentBehaviour.anchorPoint = locationOfTouch;
+//        self.mainImage.center = locationOfTouch ;
+        
         
     }else if(sender.state == UIGestureRecognizerStateEnded)
     {
         //remove the attachment Behaviour
         [self.mainAnimator removeBehavior:self.attachmentBehaviour];
-        
         DIRECTION  userIntention = [self getUserMovementIntention:self.mainImage];
         switch (userIntention) {
             case ORIGINAL_LOCATION:
@@ -152,7 +166,7 @@ typedef enum{
     if(!_pushBehaviour)
     {
         _pushBehaviour = [[UIPushBehavior alloc]initWithItems:@[self.mainImage] mode:UIPushBehaviorModeInstantaneous];
-        _pushBehaviour.magnitude = 30.0;
+        _pushBehaviour.magnitude = PUSH_FORCE;
     }
     return _pushBehaviour;
 }
