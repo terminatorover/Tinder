@@ -31,6 +31,7 @@ typedef enum{
 @property (nonatomic) UIPushBehavior *pushBehaviour;
 
 @property (weak, nonatomic) IBOutlet UIImageView *mainImage;
+@property (weak, nonatomic) IBOutlet UIImageView *backImage;
 
 @property CURRENTLY_SHOWING cardShown;
 
@@ -69,6 +70,7 @@ typedef enum{
         [self.mainAnimator removeBehavior:self.snapBehaviour];
         [self.mainAnimator removeBehavior:self.pushBehaviour];
         
+        
         //add the attachment Behaviour
         CGPoint touchPointInImage = [sender locationInView:self.mainImage];
         CGFloat midXValueOfBox = CGRectGetMidX( self.mainImage.frame);
@@ -104,21 +106,19 @@ typedef enum{
                 //use push to get rid of the card by pushing it down
                 self.pushBehaviour.angle = 1.5f;
                 [self.mainAnimator addBehavior:self.pushBehaviour];
-                //reset the view's location to the original location
-                self.mainImage.center = self.initalImageLocation;
+                [self setCurrentCardShown];
                 break;
             case RIGHT:
                 //user force to push it to the right
                 self.pushBehaviour.angle = M_PI_2;
                 [self.mainAnimator addBehavior:self.pushBehaviour];
-                self.mainImage.center = self.initalImageLocation;
+                [self setCurrentCardShown];
                 break;
             case LEFT:
                 //use force to push it to the left
-
                 self.pushBehaviour.angle = M_PI;
                 [self.mainAnimator addBehavior:self.pushBehaviour];
-                self.mainImage.center = self.initalImageLocation;
+                [self setCurrentCardShown];
                 break;
             default:
                 break;
@@ -126,6 +126,7 @@ typedef enum{
     }
     
 }
+
 
 #pragma mark - Gesture Recongziner Delegate
 - (BOOL)gestureRecognizer:(UIGestureRecognizer *)gestureRecognizer shouldRecognizeSimultaneouslyWithGestureRecognizer:(UIGestureRecognizer *)otherGestureRecognizer
@@ -167,7 +168,40 @@ typedef enum{
 }
 
 
+#pragma mark - Helepers
+/**
+ *  Gives us which view needs to be interactive,also moves the
+ *  image view that was pushed out to it's inital location
+ *  @return top/bottom imageView
+ */
+- (UIImageView *)toBeAnimated
+{
+    if(self.cardShown == TOP_CARD)
+    {
+        self.backImage.center = self.initalImageLocation;
+        return self.mainImage;
+    }
+    self.mainImage.center = self.initalImageLocation;
+    return self.backImage;
+}
 
+/**
+ *  Sets the current card shown to the appropraite card, namely 
+ *  if were were showing the top one and the user moves it
+ *  off the scree we say that the other one is on top(we also 
+ *  bring it to the front(in the view hierarcy
+ */
+- (void)setCurrentCardShown
+{
+    if(self.cardShown == TOP_CARD)
+    {
+        self.cardShown = BOTTOM_CARD;
+        [self.view bringSubviewToFront:self.backImage];
+        return;
+    }
+    [self.view bringSubviewToFront:self.mainImage];
+    self.cardShown = TOP_CARD;
+}
 #pragma mark - hit test 
 /**
  *  Figures out where the user intends to move the image towards
