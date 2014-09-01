@@ -456,6 +456,7 @@
 				284697B319B2989D00D0C09C /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 		284697B419B2989D00D0C09C /* Build configuration list for PBXNativeTarget "TinderTests" */ = {
 			isa = XCConfigurationList;
@@ -464,6 +465,7 @@
 				284697B619B2989D00D0C09C /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};

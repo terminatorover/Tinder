@@ -17,6 +17,12 @@ typedef enum{
     ORIGINAL_LOCATION
 }DIRECTION;
 
+
+typedef enum{
+    TOP_CARD,
+    BOTTOM_CARD
+}CURRENTLY_SHOWING;
+
 @interface RGViewController ()<UIGestureRecognizerDelegate>
 
 @property (nonatomic) UIAttachmentBehavior *attachmentBehaviour;
@@ -25,6 +31,8 @@ typedef enum{
 @property (nonatomic) UIPushBehavior *pushBehaviour;
 
 @property (weak, nonatomic) IBOutlet UIImageView *mainImage;
+
+@property CURRENTLY_SHOWING cardShown;
 
 @property CGPoint initalImageLocation;
 
@@ -37,6 +45,7 @@ typedef enum{
 {
     [super viewDidLoad];
     // Do any additional setup after loading the view.
+    self.cardShown = TOP_CARD;
 }
 
 - (void)viewWillAppear:(BOOL)animated{
@@ -95,17 +104,21 @@ typedef enum{
                 //use push to get rid of the card by pushing it down
                 self.pushBehaviour.angle = 1.5f;
                 [self.mainAnimator addBehavior:self.pushBehaviour];
+                //reset the view's location to the original location
+                self.mainImage.center = self.initalImageLocation;
                 break;
             case RIGHT:
                 //user force to push it to the right
                 self.pushBehaviour.angle = M_PI_2;
                 [self.mainAnimator addBehavior:self.pushBehaviour];
+                self.mainImage.center = self.initalImageLocation;
                 break;
             case LEFT:
                 //use force to push it to the left
 
                 self.pushBehaviour.angle = M_PI;
                 [self.mainAnimator addBehavior:self.pushBehaviour];
+                self.mainImage.center = self.initalImageLocation;
                 break;
             default:
                 break;
@@ -132,24 +145,6 @@ typedef enum{
 }
 
 
-- (UIAttachmentBehavior *)attachmentBehaviour
-{
-    if(!_attachmentBehaviour)
-    {
-//        _attachmentBehaviour.anchorPoint.x - self.mainImage.center.x
-//        self.mainImage.center.y - _attachmentBehaviour.anchorPoint.y
-                
-//        self.mainImage.center.x - self.initalImageLocation.x
-        NSLog(@"X value: %f",(self.mainImage.center.x - self.initalImageLocation.x )/1.3 );
-
-        _attachmentBehaviour = [[ UIAttachmentBehavior alloc]initWithItem:self.mainImage
-                                                         offsetFromCenter:UIOffsetMake(10,0)
-                                                         attachedToAnchor:self.mainImage.center] ;
-                                                                                       
-        
-    }
-    return _attachmentBehaviour;
-}
 
 - (UISnapBehavior *)snapBehaviour
 {
