@@ -6,7 +6,7 @@
 //  Copyright (c) 2014 EnterWithBoldness. All rights reserved.
 //
 
-#define PUSH_FORCE 100.0
+#define PUSH_FORCE 2
 
 #import "RGViewController.h"
 
@@ -26,18 +26,25 @@ typedef enum{
 
 @property (weak, nonatomic) IBOutlet UIImageView *mainImage;
 
+@property (nonatomic) NSArray *arrayOfImages;
+
 @property CGPoint initalImageLocation;
 @property CGAffineTransform initalTransform;
 
 @end
 
 @implementation RGViewController
+{
+    NSInteger count ;
+}
 
 
 - (void)viewDidLoad
 {
     [super viewDidLoad];
     // Do any additional setup after loading the view.
+    count = 0;
+    
 }
 
 - (void)viewWillAppear:(BOOL)animated{
@@ -122,25 +129,37 @@ typedef enum{
 #pragma mark - Move back onto screen 
 - (void)animateBackToScreen
 {
+    count +=1;
     
+    NSString *imageId = [self.arrayOfImages objectAtIndex:count%7];
+    UIImage *imageToBeSeen = [UIImage imageNamed:imageId];
+    self.mainImage.image = imageToBeSeen;
     [self.mainAnimator removeAllBehaviors];
-    self.mainImage.frame = CGRectMake(self.initalImageLocation.x, self.initalImageLocation.y, 0, 0);
     self.mainImage.transform = self.initalTransform;
     self.mainImage.alpha = 0.0;
-    NSTimeInterval waitForTime = 1;
-    [UIView animateWithDuration:1.5
+    self.mainImage.center = self.initalImageLocation;
+    NSTimeInterval waitForTime = .5;
+    
+    self.mainImage.frame  = CGRectMake(self.initalImageLocation.x, self.initalImageLocation.y, 10, 10);
+    [UIView animateWithDuration:.8
                           delay:waitForTime
-         usingSpringWithDamping:.5
+         usingSpringWithDamping:.4
           initialSpringVelocity:1.0f
                         options:UIViewAnimationOptionCurveEaseIn
                      animations:^{
-                         self.mainImage.frame = CGRectMake(self.initalImageLocation.x, self.initalImageLocation.y, 300,200);
+                         self.mainImage.frame  = CGRectMake(self.initalImageLocation.x, self.initalImageLocation.y, 300, 200);
                          self.mainImage.center = self.initalImageLocation;
                          self.mainImage.alpha = 1.0;
     }
                      completion:^(BOOL finished) {
        
     }];
+    
+    CABasicAnimation *scaleUp = [CABasicAnimation animation];
+    scaleUp.keyPath = @"transform.scale";
+    scaleUp.toValue =   [NSValue valueWithCATransform3D:CATransform3DMakeScale(0.1, 0.1, 1.0)];
+    [self.mainImage.layer addAnimation:scaleUp forKey:@"scaleUpNow"];
+    
 }
 
 #pragma mark - Gesture Recongziner Delegate
@@ -200,6 +219,15 @@ typedef enum{
     return _pushBehaviour;
 }
 
+
+- ( NSArray *)arrayOfImages
+{
+    if(!_arrayOfImages)
+    {
+        _arrayOfImages = @[@"i1",@"i2",@"i3",@"i4",@"i5",@"i6",@"i7"];
+    }
+    return _arrayOfImages;
+}
 
 
 #pragma mark - hit test 
